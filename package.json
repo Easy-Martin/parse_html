@@ -1,0 +1,39 @@
+{
+  "name": "parse_html_to_node",
+  "version": "0.0.2",
+  "description": "This is an HTML string parsed into an object, which does not depend on a browser environment and can be used in any JavaScript runtime.",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Easy-Martin/parse_html.git"
+  },
+  "homepage": "https://github.com/Easy-Martin/parse_html",
+  "bugs": {
+    "url": "https://github.com/Easy-Martin/parse_html/issues"
+  },
+  "keywords": [
+    "parse_html",
+    "html",
+    "parser"
+  ],
+  "author": "Huang Jingjing",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.3"
+  }
+}
