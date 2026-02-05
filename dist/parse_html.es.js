@@ -26,7 +26,7 @@ function A(o) {
   return t;
 }
 function g(o) {
-  if (o = o.trim(), !o) return null;
+  if (o = o, !o) return null;
   if (!o.startsWith("<"))
     return {
       tagName: "#text",
@@ -63,7 +63,7 @@ function g(o) {
     if (i === -1) break;
     c !== -1 && c < i ? (d++, m = c + `<${h}`.length) : (d--, d === 0 && (x = i), m = i + u.length);
   }
-  const L = x !== -1 ? o.slice(r.length, x).trim() : o.slice(r.length).trim(), I = A(a), w = {
+  const L = x !== -1 ? o.slice(r.length, x) : o.slice(r.length), I = A(a), w = {
     tagName: h,
     attributes: I,
     // 类型匹配
@@ -94,7 +94,7 @@ function g(o) {
         const E = p[1].toLowerCase(), $ = `</${E}>`;
         if (C.includes(E)) {
           const f = g(i.slice(0, p[0].length));
-          f && c.push(f), i = i.slice(p[0].length).trim();
+          f && c.push(f), i = i.slice(p[0].length);
           continue;
         }
         let O = -1, j = 1, b = p[0].length;
@@ -105,7 +105,7 @@ function g(o) {
         }
         if (O !== -1) {
           const f = i.slice(0, O + $.length), y = g(f);
-          y && c.push(y), i = i.slice(O + $.length).trim();
+          y && c.push(y), i = i.slice(O + $.length);
         } else {
           const f = g(i);
           f && c.push(f), i = "";
@@ -117,7 +117,7 @@ function g(o) {
   return w;
 }
 function k(o) {
-  if (o = o.trim(), !o) return [];
+  if (o = o, !o) return [];
   const t = [];
   let e = o;
   for (; e; ) {
@@ -140,7 +140,7 @@ function k(o) {
         const a = /<([a-zA-Z0-9]+)\s*(.*?)\/?>/, h = e.match(a);
         if (h) {
           const u = g(h[0]);
-          u && t.push(u), e = e.slice(h[0].length).trim();
+          u && t.push(u), e = e.slice(h[0].length);
         } else {
           const u = g(e);
           u && t.push(u), e = "";
@@ -155,7 +155,7 @@ function k(o) {
         }
         if (h !== -1) {
           const d = e.slice(0, h + a.length), m = g(d);
-          m && t.push(m), e = e.slice(h + a.length).trim();
+          m && t.push(m), e = e.slice(h + a.length);
         } else {
           const d = g(e);
           d && t.push(d), e = "";
@@ -173,7 +173,7 @@ class T {
   constructor(t) {
     if (typeof t != "string")
       throw new Error("初始化Node必须传入HTML字符串");
-    const e = t.trim();
+    const e = t;
     if (!e)
       throw new Error("无法解析空的HTML字符串");
     const n = g(e), s = k(e);
