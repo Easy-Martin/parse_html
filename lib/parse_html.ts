@@ -62,7 +62,7 @@ function parseAttributes(attrStr: string): IAttributeData {
 
 // 核心工具函数：解析单个节点（内部使用）
 function parseSingleNode(html: string): INodeData | null {
-  html = html.trim();
+  html = html;
   if (!html) return null;
 
   // 文本节点（非标签内容）
@@ -126,7 +126,7 @@ function parseSingleNode(html: string): INodeData | null {
   }
 
   // 提取标签内容（开始标签和结束标签之间）
-  const content = endTagIndex !== -1 ? html.slice(startTag.length, endTagIndex).trim() : html.slice(startTag.length).trim();
+  const content = endTagIndex !== -1 ? html.slice(startTag.length, endTagIndex) : html.slice(startTag.length);
 
   // 构建基础节点数据
   const attrs = parseAttributes(attrStr);
@@ -174,7 +174,7 @@ function parseSingleNode(html: string): INodeData | null {
           if (SELF_CLOSING_TAGS.includes(tempTagName)) {
             const selfNode = parseSingleNode(remaining.slice(0, tempTagMatch[0].length));
             if (selfNode) childNodes.push(selfNode);
-            remaining = remaining.slice(tempTagMatch[0].length).trim();
+            remaining = remaining.slice(tempTagMatch[0].length);
             continue;
           }
 
@@ -203,7 +203,7 @@ function parseSingleNode(html: string): INodeData | null {
             const childHTML = remaining.slice(0, tempEndIndex + tempEndTag.length);
             const childNode = parseSingleNode(childHTML);
             if (childNode) childNodes.push(childNode);
-            remaining = remaining.slice(tempEndIndex + tempEndTag.length).trim();
+            remaining = remaining.slice(tempEndIndex + tempEndTag.length);
           } else {
             const childNode = parseSingleNode(remaining);
             if (childNode) childNodes.push(childNode);
@@ -227,7 +227,7 @@ function parseSingleNode(html: string): INodeData | null {
 
 // 新增：解析HTML片段（支持多根节点）
 function parseHTMLFragment(html: string): INodeData[] {
-  html = html.trim();
+  html = html;
   if (!html) return [];
 
   const fragmentNodes: INodeData[] = [];
@@ -268,7 +268,7 @@ function parseHTMLFragment(html: string): INodeData[] {
           if (selfClosingMatch) {
             const selfNode = parseSingleNode(selfClosingMatch[0]);
             if (selfNode) fragmentNodes.push(selfNode);
-            remaining = remaining.slice(selfClosingMatch[0].length).trim();
+            remaining = remaining.slice(selfClosingMatch[0].length);
           } else {
             const textNode = parseSingleNode(remaining);
             if (textNode) fragmentNodes.push(textNode);
@@ -300,7 +300,7 @@ function parseHTMLFragment(html: string): INodeData[] {
             const childHTML = remaining.slice(0, tempEndIndex + tempEndTag.length);
             const childNode = parseSingleNode(childHTML);
             if (childNode) fragmentNodes.push(childNode);
-            remaining = remaining.slice(tempEndIndex + tempEndTag.length).trim();
+            remaining = remaining.slice(tempEndIndex + tempEndTag.length);
           } else {
             const childNode = parseSingleNode(remaining);
             if (childNode) fragmentNodes.push(childNode);
@@ -333,7 +333,7 @@ class Node {
       throw new Error("初始化Node必须传入HTML字符串");
     }
 
-    const htmlTrimmed = html.trim();
+    const htmlTrimmed = html;
     if (!htmlTrimmed) {
       throw new Error("无法解析空的HTML字符串");
     }
