@@ -110,18 +110,24 @@ function parseSingleNode(html: string): INodeData | null {
   let tagCount = 1;
   let currentIndex = startTag.length;
 
+  // 循环查找匹配的结束标签，处理嵌套情况
   while (currentIndex < html.length && tagCount > 0) {
+    // 查找下一个开始标签和结束标签的位置
     const nextStart = html.indexOf(`<${lowerTagName}`, currentIndex);
     const nextEnd = html.indexOf(endTag, currentIndex);
 
+    // 如果没有找到结束标签，跳出循环（可能是格式错误）
     if (nextEnd === -1) break;
+    
+    // 如果下一个开始标签在结束标签之前，说明有嵌套
     if (nextStart !== -1 && nextStart < nextEnd) {
-      tagCount++;
-      currentIndex = nextStart + `<${lowerTagName}`.length;
+      tagCount++; // 增加嵌套层级计数
+      currentIndex = nextStart + `<${lowerTagName}`.length; // 移动到嵌套开始标签之后
     } else {
-      tagCount--;
-      if (tagCount === 0) endTagIndex = nextEnd;
-      currentIndex = nextEnd + endTag.length;
+      // 当前层级结束
+      tagCount--; // 减少嵌套层级计数
+      if (tagCount === 0) endTagIndex = nextEnd; // 记录最外层的结束标签位置
+      currentIndex = nextEnd + endTag.length; // 移动到结束标签之后
     }
   }
 
