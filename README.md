@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/parse_html_to_node)](https://www.npmjs.com/package/parse_html_to_node)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-44_passed,_1_skipped-green.svg)]
+[![Tests](https://img.shields.io/badge/tests-44_passed,_1_skipped-green.svg)](https://vitest.dev/)
 
 一个不依赖浏览器环境的HTML字符串解析器，可将HTML转换为可操作的对象树，支持完整的DOM操作、属性管理和样式处理。
 
@@ -337,7 +337,7 @@ parse_html_to_node/
 
 ## 许可证
 
-[MIT](LICENSE) © Huang Jingjing
+[MIT](LICENSE) 
 
 ## 相关链接
 
