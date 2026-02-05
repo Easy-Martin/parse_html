@@ -9,7 +9,7 @@
 
 ## 特性
 
-- 🚀 **零依赖**：纯JavaScript实现，无需浏览器环境
+- 🚀 **零依赖**：纯JavaScript实现，无需浏览器环境，支持浏览器、Nodejs、小程序等运行环境
 - 🔧 **完整DOM操作**：支持`before`、`after`、`insert`等DOM操作方法
 - 🏷️ **属性管理**：提供`getAttr`、`setAttr`、`setAttrs`等方法
 - 🎨 **样式处理**：支持`getStyle`、`setStyle`、`setStyles`等方法
