@@ -1,10 +1,10 @@
 {
   "name": "parse_html_to_node",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "This is an HTML string parsed into an object, which does not depend on a browser environment and can be used in any JavaScript runtime.",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/parse_html.umd.js",
+  "module": "dist/parse_html.es.js",
+  "types": "dist/parse_html.d.ts",
   "files": [
     "dist"
   ],
