@@ -79,6 +79,16 @@ describe('Node 构造函数', () => {
     expect(node.getStyle('font-size')).toBe('14px'); // 支持短横线格式
   });
 
+  it('应该解析单引号属性值', () => {
+    const node = new Node("<div class='container'>Test</div>");
+    expect(node.getAttr('class')).toBe('container');
+  });
+
+  it('应该解析无引号属性值', () => {
+    const node = new Node('<div class=container>Test</div>');
+    expect(node.getAttr('class')).toBe('container');
+  });
+
   it('应该抛出错误当传入非字符串', () => {
     expect(() => new Node(123 as any)).toThrow('初始化Node必须传入HTML字符串');
   });
@@ -87,8 +97,8 @@ describe('Node 构造函数', () => {
     expect(() => new Node('')).toThrow('无法解析空的HTML字符串');
   });
 
-  it.skip('应该抛出错误当传入无效 HTML', () => {
-    expect(() => new Node('<div><p>')).toThrow('无法解析无效的HTML字符串');
+  it('应该抛出错误当传入无效 HTML', () => {
+    expect(() => new Node('<>')).toThrow('无法解析无效的HTML字符串');
   });
 });
 
@@ -193,6 +203,11 @@ describe('insert() 方法', () => {
     expect(() => node.insert(-1, '<span>Test</span>')).toThrow('插入位置-1无效');
     expect(() => node.insert(2, '<span>Test</span>')).toThrow('插入位置2无效');
   });
+
+  it('应该抛出错误当传入非法节点类型', () => {
+    const node = new Node('<div></div>');
+    expect(() => node.insert(0, 123 as any)).toThrow('插入的节点必须是HTML字符串或Node实例');
+  });
 });
 
 describe('属性操作方法', () => {
@@ -267,6 +282,21 @@ describe('属性操作方法', () => {
     const result = node.setAttrs({ 'id': 'test' });
     expect(result).toBe(node);
   });
+
+  it('getAttr() 应该对非字符串属性名抛出错误', () => {
+    const node = new Node('<div></div>');
+    expect(() => node.getAttr(123 as any)).toThrow('属性名必须是字符串');
+  });
+
+  it('setAttr() 应该对非字符串属性名抛出错误', () => {
+    const node = new Node('<div></div>');
+    expect(() => node.setAttr(123 as any, 'value')).toThrow('属性名必须是字符串');
+  });
+
+  it('setAttrs() 应该对 null 参数抛出错误', () => {
+    const node = new Node('<div></div>');
+    expect(() => node.setAttrs(null as any)).toThrow('属性对象必须是非空对象');
+  });
 });
 
 describe('样式操作方法', () => {
@@ -340,6 +370,21 @@ describe('样式操作方法', () => {
     const node = new Node('<div></div>');
     const result = node.setStyles({ 'color': 'red' });
     expect(result).toBe(node);
+  });
+
+  it('getStyle() 应该对非字符串属性名抛出错误', () => {
+    const node = new Node('<div></div>');
+    expect(() => node.getStyle(123 as any)).toThrow('样式属性名必须是字符串');
+  });
+
+  it('setStyle() 应该对非字符串属性名抛出错误', () => {
+    const node = new Node('<div></div>');
+    expect(() => node.setStyle(123 as any, 'red')).toThrow('样式属性名必须是字符串');
+  });
+
+  it('setStyles() 应该对 null 参数抛出错误', () => {
+    const node = new Node('<div></div>');
+    expect(() => node.setStyles(null as any)).toThrow('样式对象必须是非空对象');
   });
 });
 

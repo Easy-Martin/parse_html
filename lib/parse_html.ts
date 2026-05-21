@@ -62,7 +62,6 @@ function parseAttributes(attrStr: string): IAttributeData {
 
 // 核心工具函数：解析单个节点（内部使用）
 function parseSingleNode(html: string): INodeData | null {
-  html = html;
   if (!html) return null;
 
   // 文本节点（非标签内容）
@@ -233,7 +232,6 @@ function parseSingleNode(html: string): INodeData | null {
 
 // 新增：解析HTML片段（支持多根节点）
 function parseHTMLFragment(html: string): INodeData[] {
-  html = html;
   if (!html) return [];
 
   const fragmentNodes: INodeData[] = [];
@@ -330,59 +328,42 @@ class Node {
   public children: Node[];
   public parent: Node | null;
 
-  /**
-   * 构造函数：通过HTML字符串初始化节点（支持单根/多根）
-   * @param {string} html - HTML字符串（单根/多根均可）
-   */
   constructor(html: string) {
     if (typeof html !== "string") {
       throw new Error("初始化Node必须传入HTML字符串");
     }
 
-    const htmlTrimmed = html;
-    if (!htmlTrimmed) {
+    if (!html) {
       throw new Error("无法解析空的HTML字符串");
     }
 
-    // 尝试解析为单一节点
-    const singleNodeData = parseSingleNode(htmlTrimmed);
-    // 解析为片段（多根节点）
-    const fragmentNodeData = parseHTMLFragment(htmlTrimmed);
+    const fragmentNodes = parseHTMLFragment(html);
 
-    // 初始化默认属性
     this.tagName = "";
-    this.attributes = {}; // 符合IAttributeData类型
+    this.attributes = {};
     this.styles = {};
     this.textContent = "";
     this.children = [];
     this.parent = null;
 
-    // 节点核心属性赋值
-    if (singleNodeData && fragmentNodeData.length === 1) {
-      // 单根节点
-      this.tagName = singleNodeData.tagName;
-      this.attributes = { ...singleNodeData.attributes };
-      this.styles = { ...singleNodeData.styles };
-      this.textContent = singleNodeData.textContent || "";
+    if (fragmentNodes.length === 1) {
+      const data = fragmentNodes[0];
+      this.tagName = data.tagName;
+      this.attributes = { ...data.attributes };
+      this.styles = { ...data.styles };
+      this.textContent = data.textContent || "";
 
-      // 子节点转换为Node实例
-      if (singleNodeData.children.length > 0) {
-        this.children = singleNodeData.children.map((childData) => {
-          const childNode = new Node(this.#generateHTMLFromData(childData));
+      if (data.children.length > 0) {
+        this.children = data.children.map((childData) => {
+          const childNode = Node.fromNodeData(childData);
           childNode.parent = this;
           return childNode;
         });
       }
-    } else if (fragmentNodeData.length > 0) {
-      // 多根节点 → 标记为片段节点
+    } else if (fragmentNodes.length > 1) {
       this.tagName = "#fragment";
-      this.attributes = {}; // 符合IAttributeData类型
-      this.styles = {};
-      this.textContent = "";
-
-      // 片段的子节点是多个根节点
-      this.children = fragmentNodeData.map((childData) => {
-        const childNode = new Node(this.#generateHTMLFromData(childData));
+      this.children = fragmentNodes.map((nodeData) => {
+        const childNode = Node.fromNodeData(nodeData);
         childNode.parent = this;
         return childNode;
       });
@@ -391,50 +372,19 @@ class Node {
     }
   }
 
-  /**
-   * 私有方法：从节点数据生成HTML字符串（用于子节点初始化）
-   * @param {INodeData} nodeData - 节点数据
-   * @returns {string} HTML字符串
-   */
-  #generateHTMLFromData(nodeData: INodeData): string {
-    if (nodeData.tagName === "#text") return nodeData.textContent;
-
-    // 构建开始标签
-    let startTag = `<${nodeData.tagName}`;
-    const attrs = { ...nodeData.attributes };
-
-    // 拼接样式属性（覆盖原始style）
-    if (Object.keys(nodeData.styles).length > 0) {
-      const styleStr = Object.entries(nodeData.styles)
-        .map(([key, val]) => `${camelToKebab(key)}: ${val}`)
-        .join("; ");
-      attrs.style = styleStr;
-    }
-
-    // 拼接所有属性：过滤内部属性styleObj
-    for (const [key, val] of Object.entries(attrs)) {
-      if (key === "styleObj") continue; // 核心修复：跳过内部样式对象属性
-      // 确保val是字符串（IAttributeData中除了styleObj都是string）
-      if (typeof val === "string") {
-        startTag += ` ${key}="${val}"`;
-      }
-    }
-
-    // 自闭合标签处理
-    if (SELF_CLOSING_TAGS.includes(nodeData.tagName)) {
-      startTag += "/>";
-      return startTag;
-    }
-
-    startTag += ">";
-
-    // 拼接内容（文本+子节点）
-    let content = nodeData.textContent;
-    if (nodeData.children.length > 0) {
-      content += nodeData.children.map((child) => this.#generateHTMLFromData(child)).join("");
-    }
-
-    return `${startTag}${content}</${nodeData.tagName}>`;
+  private static fromNodeData(data: INodeData): Node {
+    const node = Object.create(Node.prototype) as Node;
+    node.tagName = data.tagName;
+    node.attributes = { ...data.attributes };
+    node.styles = { ...data.styles };
+    node.textContent = data.textContent || "";
+    node.parent = null;
+    node.children = data.children.map((childData) => {
+      const childNode = Node.fromNodeData(childData);
+      childNode.parent = node;
+      return childNode;
+    });
+    return node;
   }
 
   /**
@@ -455,7 +405,7 @@ class Node {
       throw new Error("当前节点没有父节点，无法执行before操作");
     }
 
-    const nodeToInsert = this.#convertToNode(newNode);
+    const nodeToInsert = this.convertToNode(newNode);
     const currentIndex = this.parent.children.findIndex((child) => child === this);
 
     if (currentIndex === -1) {
@@ -479,7 +429,7 @@ class Node {
       throw new Error("当前节点没有父节点，无法执行after操作");
     }
 
-    const nodeToInsert = this.#convertToNode(newNode);
+    const nodeToInsert = this.convertToNode(newNode);
     const currentIndex = this.parent.children.findIndex((child) => child === this);
 
     if (currentIndex === -1) {
@@ -504,7 +454,7 @@ class Node {
       throw new Error(`插入位置${position}无效，必须是0到${this.children.length}之间的整数`);
     }
 
-    const nodeToInsert = this.#convertToNode(newNode);
+    const nodeToInsert = this.convertToNode(newNode);
     // 如果插入的是片段节点，展开其所有子节点（符合DOM标准）
     if (nodeToInsert.tagName === "#fragment") {
       nodeToInsert.children.forEach((child, index) => {
@@ -565,9 +515,6 @@ class Node {
    * @returns {Node} 当前节点（链式调用）
    */
   setAttrs(attrs: Record<string, string | null | undefined>): Node {
-    if (this.tagName === "#fragment" || this.tagName === "#text") {
-      throw new Error("片段/文本节点不支持设置属性");
-    }
     if (typeof attrs !== "object" || attrs === null) {
       throw new Error("属性对象必须是非空对象");
     }
@@ -627,9 +574,6 @@ class Node {
    * @returns {Node} 当前节点（链式调用）
    */
   setStyles(styles: Record<string, string | null | undefined>): Node {
-    if (this.tagName === "#fragment" || this.tagName === "#text") {
-      throw new Error("片段/文本节点不支持设置样式");
-    }
     if (typeof styles !== "object" || styles === null) {
       throw new Error("样式对象必须是非空对象");
     }
@@ -699,7 +643,7 @@ class Node {
    * @param {string|Node} node - HTML字符串或Node实例
    * @returns {Node} Node实例
    */
-  #convertToNode(node: string | Node): Node {
+  private convertToNode(node: string | Node): Node {
     if (node instanceof Node) return node;
     if (typeof node === "string") return new Node(node);
     throw new Error("插入的节点必须是HTML字符串或Node实例");

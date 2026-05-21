@@ -3,18 +3,14 @@ interface IAttributeData {
     styleObj?: Record<string, string>;
 }
 declare class Node {
-    #private;
     tagName: string;
     attributes: IAttributeData;
     styles: Record<string, string>;
     textContent: string;
     children: Node[];
     parent: Node | null;
-    /**
-     * 构造函数：通过HTML字符串初始化节点（支持单根/多根）
-     * @param {string} html - HTML字符串（单根/多根均可）
-     */
     constructor(html: string);
+    private static fromNodeData;
     /**
      * 子集管理：获取当前节点的所有子节点
      * @returns {Node[]} 子节点数组（浅拷贝）
@@ -82,5 +78,11 @@ declare class Node {
      * @returns {string} HTML字符串
      */
     getHtml(): string;
+    /**
+     * 私有辅助方法：统一转换插入的节点为Node实例
+     * @param {string|Node} node - HTML字符串或Node实例
+     * @returns {Node} Node实例
+     */
+    private convertToNode;
 }
 export default Node;
