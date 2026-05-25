@@ -131,6 +131,11 @@ describe('child() 方法', () => {
     const node = new Node('Hello World');
     expect(node.child()).toHaveLength(0);
   });
+
+  it('空元素应该返回空数组', () => {
+    const node = new Node('<div></div>');
+    expect(node.child()).toHaveLength(0);
+  });
 });
 
 describe('before() 和 after() 方法', () => {
@@ -197,6 +202,35 @@ describe('before() 和 after() 方法', () => {
   it('应该抛出错误当没有父节点', () => {
     const node = new Node('<div>Test</div>');
     expect(() => node.before('<span>Test</span>')).toThrow('当前节点没有父节点');
+  });
+
+  it('after() 应该抛出错误当没有父节点', () => {
+    const node = new Node('<div>Test</div>');
+    expect(() => node.after('<span>Test</span>')).toThrow('当前节点没有父节点');
+  });
+
+  it('before() 应该支持插入 Node 实例', () => {
+    const parent = new Node('<div><p>Original</p></div>');
+    const child = parent.children[0];
+    const newNode = new Node('<span>Node</span>');
+
+    child.before(newNode);
+
+    expect(parent.children).toHaveLength(2);
+    expect(parent.children[0].tagName).toBe('span');
+    expect(parent.children[0].parent).toBe(parent);
+  });
+
+  it('after() 应该支持插入 Node 实例', () => {
+    const parent = new Node('<div><p>Original</p></div>');
+    const child = parent.children[0];
+    const newNode = new Node('<span>Node</span>');
+
+    child.after(newNode);
+
+    expect(parent.children).toHaveLength(2);
+    expect(parent.children[1].tagName).toBe('span');
+    expect(parent.children[1].parent).toBe(parent);
   });
 });
 
@@ -476,6 +510,24 @@ describe('getHtml() 方法', () => {
     expect(html).toContain('color: blue');
     expect(html).toContain('font-size: 16px');
     expect(html).not.toContain('font-size: 12px');
+  });
+
+  it('仅使用 setAttr 设置 style 时 getHtml 应正常输出', () => {
+    const node = new Node('<div></div>');
+    node.setAttr('style', 'color: blue; font-size: 14px');
+
+    const html = node.getHtml();
+    expect(html).toContain('style="color: blue; font-size: 14px"');
+  });
+
+  it('解析后的 style 与 setStyle 增量叠加应正确合并', () => {
+    const node = new Node('<div style="color: red; font-size: 14px;">Hello</div>');
+    node.setStyle('fontWeight', 'bold');
+
+    const html = node.getHtml();
+    expect(html).toContain('color: red');
+    expect(html).toContain('font-size: 14px');
+    expect(html).toContain('font-weight: bold');
   });
 
   it('应该保持样式属性的一致性', () => {
