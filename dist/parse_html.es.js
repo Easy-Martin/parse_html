@@ -1,31 +1,46 @@
-const S = ["img", "br", "input", "meta", "link", "hr", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
-function M(o) {
+const y = ["img", "br", "input", "meta", "link", "hr", "area", "base", "col", "embed", "param", "source", "track", "wbr"];
+function S(o) {
   return o.replace(/[A-Z]/g, (t) => `-${t.toLowerCase()}`);
 }
-function j(o) {
+function w(o) {
   return o.replace(/-([a-z])/g, (t, e) => e.toUpperCase());
 }
-function A(o) {
+function E(o, t, e) {
+  const n = `</${t}>`;
+  let s = 1, r = e;
+  for (; r < o.length && s > 0; ) {
+    const a = o.indexOf(`<${t}`, r), i = o.indexOf(n, r);
+    if (i === -1) break;
+    if (a !== -1 && a < i)
+      s++, r = a + `<${t}`.length;
+    else {
+      if (s--, s === 0) return i;
+      r = i + n.length;
+    }
+  }
+  return -1;
+}
+function O(o) {
   const t = {};
   if (!o) return t;
   const e = /([a-zA-Z0-9-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
   let n;
   for (; (n = e.exec(o)) !== null; ) {
-    const [, s, i, a, c] = n, l = i || a || c || "";
-    t[s] = l;
+    const [, s, r, a, i] = n, h = r || a || i || "";
+    t[s] = h;
   }
   if (t.style) {
-    const s = {}, i = /([a-zA-Z0-9-]+)\s*:\s*([^;]+)/g;
+    const s = {}, r = /([a-zA-Z0-9-]+)\s*:\s*([^;]+)/g;
     let a;
-    for (; (a = i.exec(t.style)) !== null; ) {
-      const [, c, l] = a;
-      s[j(c.trim())] = l.trim();
+    for (; (a = r.exec(t.style)) !== null; ) {
+      const [, i, h] = a;
+      s[w(i.trim())] = h.trim();
     }
     t.styleObj = s, delete t.style;
   }
   return t;
 }
-function p(o) {
+function f(o) {
   if (!o) return null;
   if (!o.startsWith("<"))
     return {
@@ -39,14 +54,14 @@ function p(o) {
     };
   const t = /<([a-zA-Z0-9]+)\s*(.*?)\/?>/, e = o.match(t);
   if (e) {
-    const [, h, r] = e;
-    if (S.includes(h.toLowerCase())) {
-      const w = A(r);
+    const [, u, l] = e;
+    if (y.includes(u.toLowerCase())) {
+      const m = O(l);
       return {
-        tagName: h.toLowerCase(),
-        attributes: w,
+        tagName: u.toLowerCase(),
+        attributes: m,
         // 类型匹配
-        styles: w.styleObj || {},
+        styles: m.styleObj || {},
         // styleObj是Record<string, string>，符合styles类型
         textContent: "",
         children: [],
@@ -56,140 +71,122 @@ function p(o) {
   }
   const n = /<([a-zA-Z0-9]+)\s*(.*?)>/, s = o.match(n);
   if (!s) return null;
-  const [i, a, c] = s, l = a.toLowerCase(), g = `</${l}>`;
-  let x = -1, u = 1, d = i.length;
-  for (; d < o.length && u > 0; ) {
-    const h = o.indexOf(`<${l}`, d), r = o.indexOf(g, d);
-    if (r === -1) break;
-    h !== -1 && h < r ? (u++, d = h + `<${l}`.length) : (u--, u === 0 && (x = r), d = r + g.length);
-  }
-  const L = x !== -1 ? o.slice(i.length, x) : o.slice(i.length), I = A(c), N = {
-    tagName: l,
-    attributes: I,
+  const [r, a, i] = s, h = a.toLowerCase(), c = E(o, h, r.length), N = c !== -1 ? o.slice(r.length, c) : o.slice(r.length), C = O(i), p = {
+    tagName: h,
+    attributes: C,
     // 类型匹配
-    styles: I.styleObj || {},
+    styles: C.styleObj || {},
     // 类型匹配
     textContent: "",
     children: [],
     parent: null
   };
-  if (L) {
-    const h = [];
-    let r = L;
-    for (; r; ) {
-      const w = r.indexOf("<");
-      if (w === -1) {
-        const m = p(r);
-        m && h.push(m), r = "";
-      } else if (w > 0) {
-        const m = p(r.slice(0, w));
-        m && h.push(m), r = r.slice(w);
+  if (N) {
+    const u = [];
+    let l = N;
+    for (; l; ) {
+      const m = l.indexOf("<");
+      if (m === -1) {
+        const g = f(l);
+        g && u.push(g), l = "";
+      } else if (m > 0) {
+        const g = f(l.slice(0, m));
+        g && u.push(g), l = l.slice(m);
       } else {
-        const m = r.match(n);
-        if (!m) {
-          const f = p(r);
-          f && h.push(f), r = "";
+        const g = l.match(n);
+        if (!g) {
+          const d = f(l);
+          d && u.push(d), l = "";
           continue;
         }
-        const C = m[1].toLowerCase(), E = `</${C}>`;
-        if (S.includes(C)) {
-          const f = p(r.slice(0, m[0].length));
-          f && h.push(f), r = r.slice(m[0].length);
+        const b = g[1].toLowerCase();
+        if (y.includes(b)) {
+          const d = f(l.slice(0, g[0].length));
+          d && u.push(d), l = l.slice(g[0].length);
           continue;
         }
-        let O = -1, $ = 1, T = m[0].length;
-        for (; T < r.length && $ > 0; ) {
-          const f = r.indexOf(`<${C}`, T), b = r.indexOf(E, T);
-          if (b === -1) break;
-          f !== -1 && f < b ? ($++, T = f + `<${C}`.length) : ($--, $ === 0 && (O = b), T = b + E.length);
-        }
-        if (O !== -1) {
-          const f = r.slice(0, O + E.length), b = p(f);
-          b && h.push(b), r = r.slice(O + E.length);
+        const T = E(l, b, g[0].length), L = b.length + 3;
+        if (T !== -1) {
+          const d = l.slice(0, T + L), j = f(d);
+          j && u.push(j), l = l.slice(T + L);
         } else {
-          const f = p(r);
-          f && h.push(f), r = "";
+          const d = f(l);
+          d && u.push(d), l = "";
         }
       }
     }
-    N.children = h.filter(Boolean), N.children.length === 1 && N.children[0].tagName === "#text" && (N.textContent = N.children[0].textContent, N.children = []);
+    p.children = u.filter(Boolean), p.children.length === 1 && p.children[0].tagName === "#text" && (p.textContent = p.children[0].textContent, p.children = []);
   }
-  return N;
+  return p;
 }
-function H(o) {
+function A(o) {
   if (!o) return [];
   const t = [];
   let e = o;
   for (; e; ) {
     const n = e.indexOf("<");
     if (n === -1) {
-      const s = p(e);
+      const s = f(e);
       s && t.push(s), e = "";
     } else if (n > 0) {
-      const s = p(e.slice(0, n));
+      const s = f(e.slice(0, n));
       s && t.push(s), e = e.slice(n);
     } else {
-      const s = /<([a-zA-Z0-9]+)\s*(.*?)>/, i = e.match(s);
-      if (!i) {
-        const c = p(e);
-        c && t.push(c), e = "";
+      const s = /<([a-zA-Z0-9]+)\s*(.*?)>/, r = e.match(s);
+      if (!r) {
+        const i = f(e);
+        i && t.push(i), e = "";
         continue;
       }
-      const a = i[1].toLowerCase();
-      if (S.includes(a)) {
-        const c = /<([a-zA-Z0-9]+)\s*(.*?)\/?>/, l = e.match(c);
-        if (l) {
-          const g = p(l[0]);
-          g && t.push(g), e = e.slice(l[0].length);
+      const a = r[1].toLowerCase();
+      if (y.includes(a)) {
+        const i = /<([a-zA-Z0-9]+)\s*(.*?)\/?>/, h = e.match(i);
+        if (h) {
+          const c = f(h[0]);
+          c && t.push(c), e = e.slice(h[0].length);
         } else {
-          const g = p(e);
-          g && t.push(g), e = "";
+          const c = f(e);
+          c && t.push(c), e = "";
         }
       } else {
-        const c = `</${a}>`;
-        let l = -1, g = 1, x = i[0].length;
-        for (; x < e.length && g > 0; ) {
-          const u = e.indexOf(`<${a}`, x), d = e.indexOf(c, x);
-          if (d === -1) break;
-          u !== -1 && u < d ? (g++, x = u + `<${a}`.length) : (g--, g === 0 && (l = d), x = d + c.length);
-        }
-        if (l !== -1) {
-          const u = e.slice(0, l + c.length), d = p(u);
-          d && t.push(d), e = e.slice(l + c.length);
+        const i = E(e, a, r[0].length), h = a.length + 3;
+        if (i !== -1) {
+          const c = e.slice(0, i + h), N = f(c);
+          N && t.push(N), e = e.slice(i + h);
         } else {
-          const u = p(e);
-          u && t.push(u), e = "";
+          const c = f(e);
+          c && t.push(c), e = "";
         }
       }
     }
   }
   return t.filter(Boolean);
 }
-class y {
+class x {
   constructor(t) {
     if (typeof t != "string")
       throw new Error("初始化Node必须传入HTML字符串");
     if (!t)
       throw new Error("无法解析空的HTML字符串");
-    const e = H(t);
+    const e = A(t);
     if (this.tagName = "", this.attributes = {}, this.styles = {}, this.textContent = "", this.children = [], this.parent = null, e.length === 1) {
       const n = e[0];
       this.tagName = n.tagName, this.attributes = { ...n.attributes }, this.styles = { ...n.styles }, this.textContent = n.textContent || "", n.children.length > 0 && (this.children = n.children.map((s) => {
-        const i = y.fromNodeData(s);
-        return i.parent = this, i;
+        const r = x.fromNodeData(s);
+        return r.parent = this, r;
       }));
     } else if (e.length > 1)
       this.tagName = "#fragment", this.children = e.map((n) => {
-        const s = y.fromNodeData(n);
+        const s = x.fromNodeData(n);
         return s.parent = this, s;
       });
     else
       throw new Error("无法解析无效的HTML字符串");
   }
   static fromNodeData(t) {
-    const e = Object.create(y.prototype);
+    const e = Object.create(x.prototype);
     return e.tagName = t.tagName, e.attributes = { ...t.attributes }, e.styles = { ...t.styles }, e.textContent = t.textContent || "", e.parent = null, e.children = t.children.map((n) => {
-      const s = y.fromNodeData(n);
+      const s = x.fromNodeData(n);
       return s.parent = e, s;
     }), e;
   }
@@ -211,7 +208,9 @@ class y {
     const e = this.convertToNode(t), n = this.parent.children.findIndex((s) => s === this);
     if (n === -1)
       throw new Error("当前节点不在父节点的子节点列表中");
-    return this.parent.children.splice(n, 0, e), e.parent = this.parent, this;
+    return e.tagName === "#fragment" ? e.children.forEach((s, r) => {
+      s.parent = this.parent, this.parent?.children.splice(n + r, 0, s);
+    }) : (this.parent.children.splice(n, 0, e), e.parent = this.parent), this;
   }
   /**
    * DOM操作：在当前节点之后插入新元素
@@ -224,7 +223,9 @@ class y {
     const e = this.convertToNode(t), n = this.parent.children.findIndex((s) => s === this);
     if (n === -1)
       throw new Error("当前节点不在父节点的子节点列表中");
-    return this.parent.children.splice(n + 1, 0, e), e.parent = this.parent, this;
+    return e.tagName === "#fragment" ? e.children.forEach((s, r) => {
+      s.parent = this.parent, this.parent?.children.splice(n + 1 + r, 0, s);
+    }) : (this.parent.children.splice(n + 1, 0, e), e.parent = this.parent), this;
   }
   /**
    * DOM操作：在指定位置插入新元素
@@ -236,8 +237,8 @@ class y {
     if (typeof t != "number" || t < 0 || t > this.children.length)
       throw new Error(`插入位置${t}无效，必须是0到${this.children.length}之间的整数`);
     const n = this.convertToNode(e);
-    return n.tagName === "#fragment" ? n.children.forEach((s, i) => {
-      s.parent = this, this.children.splice(t + i, 0, s);
+    return n.tagName === "#fragment" ? n.children.forEach((s, r) => {
+      s.parent = this, this.children.splice(t + r, 0, s);
     }) : (this.children.splice(t, 0, n), n.parent = this), this;
   }
   /**
@@ -287,7 +288,7 @@ class y {
       return null;
     if (typeof t != "string")
       throw new Error("样式属性名必须是字符串");
-    const e = j(t);
+    const e = w(t);
     return this.styles[e] || this.styles[t] || null;
   }
   /**
@@ -301,7 +302,7 @@ class y {
       throw new Error("片段/文本节点不支持设置样式");
     if (typeof t != "string")
       throw new Error("样式属性名必须是字符串");
-    const n = j(t);
+    const n = w(t);
     return e == null ? (delete this.styles[n], delete this.styles[t]) : this.styles[n] = String(e), this;
   }
   /**
@@ -324,23 +325,31 @@ class y {
     if (this.tagName === "#text")
       return this.textContent;
     if (this.tagName === "#fragment")
-      return this.children.map((s) => s.getHtml()).join("");
+      return this.children.map((r) => r.getHtml()).join("");
     let t = `<${this.tagName}`;
-    const e = { ...this.attributes };
-    if (Object.keys(this.styles).length > 0) {
-      const s = Object.entries(this.styles).map(([i, a]) => `${M(i)}: ${a}`).join("; ");
-      e.style = s;
-    }
-    for (const [s, i] of Object.entries(e))
-      if (s !== "styleObj" && typeof i == "string") {
-        const a = i.replace(/"/g, "&quot;");
-        t += ` ${s}="${a}"`;
+    const e = { ...this.attributes }, n = { ...this.styles };
+    if (typeof e.style == "string") {
+      const r = /([a-zA-Z0-9-]+)\s*:\s*([^;]+)/g;
+      let a;
+      for (; (a = r.exec(e.style)) !== null; ) {
+        const [, i, h] = a, c = w(i.trim());
+        c in n || (n[c] = h.trim());
       }
-    if (S.includes(this.tagName))
+    }
+    if (Object.keys(n).length > 0) {
+      const r = Object.entries(n).map(([a, i]) => `${S(a)}: ${i}`).join("; ");
+      e.style = r;
+    }
+    for (const [r, a] of Object.entries(e))
+      if (r !== "styleObj" && typeof a == "string") {
+        const i = a.replace(/"/g, "&quot;");
+        t += ` ${r}="${i}"`;
+      }
+    if (y.includes(this.tagName))
       return t += "/>", t;
     t += ">";
-    let n = this.textContent;
-    return this.children.length > 0 && (n += this.children.map((s) => s.getHtml()).join("")), `${t}${n}</${this.tagName}>`;
+    let s = this.textContent;
+    return this.children.length > 0 && (s += this.children.map((r) => r.getHtml()).join("")), `${t}${s}</${this.tagName}>`;
   }
   /**
    * 私有辅助方法：统一转换插入的节点为Node实例
@@ -348,12 +357,12 @@ class y {
    * @returns {Node} Node实例
    */
   convertToNode(t) {
-    if (t instanceof y) return t;
-    if (typeof t == "string") return new y(t);
+    if (t instanceof x) return t;
+    if (typeof t == "string") return new x(t);
     throw new Error("插入的节点必须是HTML字符串或Node实例");
   }
 }
 export {
-  y as default
+  x as default
 };
 //# sourceMappingURL=parse_html.es.js.map
