@@ -27,6 +27,30 @@ function kebabToCamel(str: string): string {
   return str.replace(/-([a-z])/g, (_: string, match: string) => match.toUpperCase());
 }
 
+// 工具函数：查找嵌套标签的匹配结束标签位置
+function findEndTagIndex(html: string, tagName: string, startIndex: number): number {
+  const endTag = `</${tagName}>`;
+  let tagCount = 1;
+  let currentIndex = startIndex;
+
+  while (currentIndex < html.length && tagCount > 0) {
+    const nextStart = html.indexOf(`<${tagName}`, currentIndex);
+    const nextEnd = html.indexOf(endTag, currentIndex);
+
+    if (nextEnd === -1) break;
+    if (nextStart !== -1 && nextStart < nextEnd) {
+      tagCount++;
+      currentIndex = nextStart + `<${tagName}`.length;
+    } else {
+      tagCount--;
+      if (tagCount === 0) return nextEnd;
+      currentIndex = nextEnd + endTag.length;
+    }
+  }
+
+  return -1;
+}
+
 // 工具函数：解析属性字符串为属性对象（修改返回类型为IAttributeData）
 function parseAttributes(attrStr: string): IAttributeData {
   const attrs: IAttributeData = {}; // 修改：使用扩展后的属性接口
@@ -102,33 +126,9 @@ function parseSingleNode(html: string): INodeData | null {
 
   const [startTag, tagName, attrStr] = startTagMatch;
   const lowerTagName = tagName.toLowerCase();
-  const endTag = `</${lowerTagName}>`;
 
   // 查找匹配的结束标签（处理嵌套）
-  let endTagIndex = -1;
-  let tagCount = 1;
-  let currentIndex = startTag.length;
-
-  // 循环查找匹配的结束标签，处理嵌套情况
-  while (currentIndex < html.length && tagCount > 0) {
-    // 查找下一个开始标签和结束标签的位置
-    const nextStart = html.indexOf(`<${lowerTagName}`, currentIndex);
-    const nextEnd = html.indexOf(endTag, currentIndex);
-
-    // 如果没有找到结束标签，跳出循环（可能是格式错误）
-    if (nextEnd === -1) break;
-    
-    // 如果下一个开始标签在结束标签之前，说明有嵌套
-    if (nextStart !== -1 && nextStart < nextEnd) {
-      tagCount++; // 增加嵌套层级计数
-      currentIndex = nextStart + `<${lowerTagName}`.length; // 移动到嵌套开始标签之后
-    } else {
-      // 当前层级结束
-      tagCount--; // 减少嵌套层级计数
-      if (tagCount === 0) endTagIndex = nextEnd; // 记录最外层的结束标签位置
-      currentIndex = nextEnd + endTag.length; // 移动到结束标签之后
-    }
-  }
+  const endTagIndex = findEndTagIndex(html, lowerTagName, startTag.length);
 
   // 提取标签内容（开始标签和结束标签之间）
   const content = endTagIndex !== -1 ? html.slice(startTag.length, endTagIndex) : html.slice(startTag.length);
@@ -173,7 +173,6 @@ function parseSingleNode(html: string): INodeData | null {
           }
 
           const tempTagName = tempTagMatch[1].toLowerCase();
-          const tempEndTag = `</${tempTagName}>`;
 
           // 自闭合标签直接处理
           if (SELF_CLOSING_TAGS.includes(tempTagName)) {
@@ -184,31 +183,15 @@ function parseSingleNode(html: string): INodeData | null {
           }
 
           // 查找嵌套标签的结束位置
-          let tempEndIndex = -1;
-          let tempTagCount = 1;
-          let tempCurrentIndex = tempTagMatch[0].length;
-
-          while (tempCurrentIndex < remaining.length && tempTagCount > 0) {
-            const nextTempStart = remaining.indexOf(`<${tempTagName}`, tempCurrentIndex);
-            const nextTempEnd = remaining.indexOf(tempEndTag, tempCurrentIndex);
-
-            if (nextTempEnd === -1) break;
-            if (nextTempStart !== -1 && nextTempStart < nextTempEnd) {
-              tempTagCount++;
-              tempCurrentIndex = nextTempStart + `<${tempTagName}`.length;
-            } else {
-              tempTagCount--;
-              if (tempTagCount === 0) tempEndIndex = nextTempEnd;
-              tempCurrentIndex = nextTempEnd + tempEndTag.length;
-            }
-          }
+          const tempEndIndex = findEndTagIndex(remaining, tempTagName, tempTagMatch[0].length);
+          const tempEndTagLen = tempTagName.length + 3; // </ + tagName + >
 
           // 提取子节点HTML并递归解析
           if (tempEndIndex !== -1) {
-            const childHTML = remaining.slice(0, tempEndIndex + tempEndTag.length);
+            const childHTML = remaining.slice(0, tempEndIndex + tempEndTagLen);
             const childNode = parseSingleNode(childHTML);
             if (childNode) childNodes.push(childNode);
-            remaining = remaining.slice(tempEndIndex + tempEndTag.length);
+            remaining = remaining.slice(tempEndIndex + tempEndTagLen);
           } else {
             const childNode = parseSingleNode(remaining);
             if (childNode) childNodes.push(childNode);
@@ -280,31 +263,14 @@ function parseHTMLFragment(html: string): INodeData[] {
           }
         } else {
           // 非自闭合标签，找匹配的结束标签
-          const tempEndTag = `</${tempTagName}>`;
-          let tempEndIndex = -1;
-          let tempTagCount = 1;
-          let tempCurrentIndex = tempTagMatch[0].length;
-
-          while (tempCurrentIndex < remaining.length && tempTagCount > 0) {
-            const nextTempStart = remaining.indexOf(`<${tempTagName}`, tempCurrentIndex);
-            const nextTempEnd = remaining.indexOf(tempEndTag, tempCurrentIndex);
-
-            if (nextTempEnd === -1) break;
-            if (nextTempStart !== -1 && nextTempStart < nextTempEnd) {
-              tempTagCount++;
-              tempCurrentIndex = nextTempStart + `<${tempTagName}`.length;
-            } else {
-              tempTagCount--;
-              if (tempTagCount === 0) tempEndIndex = nextTempEnd;
-              tempCurrentIndex = nextTempEnd + tempEndTag.length;
-            }
-          }
+          const tempEndIndex = findEndTagIndex(remaining, tempTagName, tempTagMatch[0].length);
+          const tempEndTagLen = tempTagName.length + 3; // </ + tagName + >
 
           if (tempEndIndex !== -1) {
-            const childHTML = remaining.slice(0, tempEndIndex + tempEndTag.length);
+            const childHTML = remaining.slice(0, tempEndIndex + tempEndTagLen);
             const childNode = parseSingleNode(childHTML);
             if (childNode) fragmentNodes.push(childNode);
-            remaining = remaining.slice(tempEndIndex + tempEndTag.length);
+            remaining = remaining.slice(tempEndIndex + tempEndTagLen);
           } else {
             const childNode = parseSingleNode(remaining);
             if (childNode) fragmentNodes.push(childNode);
@@ -412,9 +378,16 @@ class Node {
       throw new Error("当前节点不在父节点的子节点列表中");
     }
 
-    // 插入到当前节点前一个位置
-    this.parent.children.splice(currentIndex, 0, nodeToInsert);
-    nodeToInsert.parent = this.parent;
+    // 插入到当前节点前一个位置，如果是片段节点则展平子节点
+    if (nodeToInsert.tagName === "#fragment") {
+      nodeToInsert.children.forEach((child, index) => {
+        child.parent = this.parent;
+        this.parent?.children.splice(currentIndex + index, 0, child);
+      });
+    } else {
+      this.parent.children.splice(currentIndex, 0, nodeToInsert);
+      nodeToInsert.parent = this.parent;
+    }
 
     return this;
   }
@@ -436,9 +409,16 @@ class Node {
       throw new Error("当前节点不在父节点的子节点列表中");
     }
 
-    // 插入到当前节点下一个位置
-    this.parent.children.splice(currentIndex + 1, 0, nodeToInsert);
-    nodeToInsert.parent = this.parent;
+    // 插入到当前节点下一个位置，如果是片段节点则展平子节点
+    if (nodeToInsert.tagName === "#fragment") {
+      nodeToInsert.children.forEach((child, index) => {
+        child.parent = this.parent;
+        this.parent?.children.splice(currentIndex + 1 + index, 0, child);
+      });
+    } else {
+      this.parent.children.splice(currentIndex + 1, 0, nodeToInsert);
+      nodeToInsert.parent = this.parent;
+    }
 
     return this;
   }
@@ -604,9 +584,21 @@ class Node {
     let startTag = `<${this.tagName}`;
     const attrs = { ...this.attributes };
 
-    // 拼接样式属性（覆盖原始style）
-    if (Object.keys(this.styles).length > 0) {
-      const styleStr = Object.entries(this.styles)
+    // 拼接样式属性（合并原始style和结构化styles，styles优先级更高）
+    const mergedStyles: Record<string, string> = { ...this.styles };
+    if (typeof attrs.style === "string") {
+      const styleRegex = /([a-zA-Z0-9-]+)\s*:\s*([^;]+)/g;
+      let styleMatch: RegExpExecArray | null;
+      while ((styleMatch = styleRegex.exec(attrs.style)) !== null) {
+        const [, prop, val] = styleMatch;
+        const camelProp = kebabToCamel(prop.trim());
+        if (!(camelProp in mergedStyles)) {
+          mergedStyles[camelProp] = val.trim();
+        }
+      }
+    }
+    if (Object.keys(mergedStyles).length > 0) {
+      const styleStr = Object.entries(mergedStyles)
         .map(([key, val]) => `${camelToKebab(key)}: ${val}`)
         .join("; ");
       attrs.style = styleStr;

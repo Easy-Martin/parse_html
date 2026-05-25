@@ -166,6 +166,34 @@ describe('before() 和 after() 方法', () => {
     expect(result).toBe(child);
   });
 
+  it('before() 应该展平多根 HTML 片段', () => {
+    const parent = new Node('<div><p>Original</p></div>');
+    const child = parent.children[0];
+
+    child.before('<span>A</span><span>B</span>');
+
+    expect(parent.children).toHaveLength(3);
+    expect(parent.children[0].tagName).toBe('span');
+    expect(parent.children[0].parent).toBe(parent);
+    expect(parent.children[1].tagName).toBe('span');
+    expect(parent.children[1].parent).toBe(parent);
+    expect(parent.children[2].tagName).toBe('p');
+  });
+
+  it('after() 应该展平多根 HTML 片段', () => {
+    const parent = new Node('<div><p>Original</p></div>');
+    const child = parent.children[0];
+
+    child.after('<span>A</span><span>B</span>');
+
+    expect(parent.children).toHaveLength(3);
+    expect(parent.children[0].tagName).toBe('p');
+    expect(parent.children[1].tagName).toBe('span');
+    expect(parent.children[1].parent).toBe(parent);
+    expect(parent.children[2].tagName).toBe('span');
+    expect(parent.children[2].parent).toBe(parent);
+  });
+
   it('应该抛出错误当没有父节点', () => {
     const node = new Node('<div>Test</div>');
     expect(() => node.before('<span>Test</span>')).toThrow('当前节点没有父节点');
@@ -427,6 +455,27 @@ describe('getHtml() 方法', () => {
     node.setAttr('data-value', 'Hello "World"');
     
     expect(node.getHtml()).toContain('data-value="Hello &quot;World&quot;"');
+  });
+
+  it('应该合并 setAttr style 和 setStyle 的输出', () => {
+    const node = new Node('<div></div>');
+    node.setAttr('style', 'color: blue');
+    node.setStyle('fontSize', '16px');
+
+    const html = node.getHtml();
+    expect(html).toContain('color: blue');
+    expect(html).toContain('font-size: 16px');
+  });
+
+  it('setStyle 应优先于 setAttr style 的相同属性', () => {
+    const node = new Node('<div></div>');
+    node.setAttr('style', 'color: blue; font-size: 12px');
+    node.setStyle('fontSize', '16px');
+
+    const html = node.getHtml();
+    expect(html).toContain('color: blue');
+    expect(html).toContain('font-size: 16px');
+    expect(html).not.toContain('font-size: 12px');
   });
 
   it('应该保持样式属性的一致性', () => {

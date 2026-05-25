@@ -1,4 +1,9 @@
 # Logs
 logs
+.DS_Store
 
 node_modules
+.codegraph/
+doc/
+
+.pnpm-store/
